@@ -37,33 +37,33 @@ jobs:
 
       - name: Build APK
         working-directory: src/calyra-android
-        run: |
-          set -o pipefail
-          gradle assembleDebug --stacktrace --info 2>&1 | tee /tmp/build.log
-          echo "EXIT:$?"
+        run: gradle assembleDebug --stacktrace
 
-      - name: Create gist with log on failure
-        if: always()
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Show APK
         run: |
-          if [ -f /tmp/build.log ]; then
-            gh gist create /tmp/build.log --public --desc "Calyra build log ${{ github.run_id }}" || echo "gist failed"
-          fi
-          cp /tmp/build.log $GITHUB_WORKSPACE/build.log || true
-          git config user.name "calyra-ci"
-          git config user.email "ci@calyra.example"
-          git checkout -B ci-logs
-          mkdir -p ci-logs
-          cp /tmp/build.log ci-logs/build-${{ github.run_id }}.log || echo "no log" > ci-logs/build-${{ github.run_id }}.log
-          git add ci-logs/
-          git commit -m "ci log ${{ github.run_id }}" || true
-          git push origin ci-logs --force || echo "push failed"
+          ls -lh src/calyra-android/app/build/outputs/apk/debug/
+          sha256sum src/calyra-android/app/build/outputs/apk/debug/*.apk
 
-      - name: Upload APK
-        if: success()
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: Calyra-APK
           path: src/calyra-android/app/build/outputs/apk/debug/*.apk
-          retention-days: 14
+
+      - name: Push APK to apk branch (for E2B fetch)
+        run: |
+          git config user.name "calyra-ci"
+          git config user.email "ci@calyra.example"
+          APK=$(ls src/calyra-android/app/build/outputs/apk/debug/*.apk | head -n1)
+          echo "APK=$APK"
+          sha256sum "$APK" | tee Calyra.apk.sha256
+          git checkout --orphan apk || git checkout -B apk
+          git rm -rf . --ignore-unmatch || true
+          cp "$APK" ./Calyra.apk
+          cp Calyra.apk.sha256 ./Calyra.apk.sha256 || true
+          echo "# Calyra APK" > README.md
+          echo "Build from $GITHUB_SHA at $GITHUB_RUN_ID" >> README.md
+          cat Calyra.apk.sha256 >> README.md
+          git add Calyra.apk Calyra.apk.sha256 README.md || true
+          git commit -m "APK $GITHUB_SHA" || true
+          git push origin apk --force
