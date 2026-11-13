@@ -39,10 +39,9 @@ jobs:
       - name: Build APK
         working-directory: src/calyra-android
         run: |
+          set -o pipefail
           gradle assembleDebug --stacktrace 2>&1 | tee /tmp/build.log
-          echo "EXIT:${PIPESTATUS[0]}" | tee -a /tmp/build.log
           cat /tmp/build.log
-          exit ${PIPESTATUS[0]}
 
       - name: Prepare APK
         if: success()
