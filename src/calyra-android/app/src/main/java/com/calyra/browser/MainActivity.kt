@@ -79,38 +79,52 @@ class MainActivity : AppCompatActivity() {
         }
         root.addView(toolbar, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
 
-        // Sekme çubuğu (Chrome benzeri) — listener webView hazır olduktan sonra eklenecek (crash fix)
+        // Sekme çubuğu — KAYBOLMASIN diye scrollable, kendi tasarım
         tabLayout = TabLayout(this).apply {
-            setBackgroundColor(0xFFF2F4F8.toInt())
-            setSelectedTabIndicatorColor(0xFF14C8B5.toInt())
+            setBackgroundColor(0xFFE6E9F2.toInt())
+            setSelectedTabIndicatorColor(0xFF12D6B5.toInt())
+            tabMode = TabLayout.MODE_SCROLLABLE
+            isInlineLabel = true
+            tabGravity = TabLayout.GRAVITY_START
         }
-        root.addView(tabLayout, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
+        // Sekmeler kaybolmasın diye yatay scroll
+        val tabScroll = HorizontalScrollView(this).apply {
+            isHorizontalScrollBarEnabled = false
+            addView(tabLayout, ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT))
+        }
+        root.addView(tabScroll, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
 
-        // Adres çubuğu kartı (kilit + kalkan + input + git)
+        // Adres çubuğu — YAZILAR SIĞSIN diye esnek, taşma yok
         val addressCard = MaterialCardView(this).apply {
-            radius = 18f
-            cardElevation = 6f
+            radius = 14f
+            cardElevation = 4f
             setCardBackgroundColor(0xFFFFFFFF.toInt())
-            strokeWidth = 2
-            strokeColor = 0xFF14C8B5.toInt()
-            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { setMargins(16,12,16,8) }
+            strokeWidth = 1
+            strokeColor = 0xFF12D6B5.toInt()
+            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { setMargins(14,10,14,6) }
         }
         val addressRow = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
-            setPadding(12,8,12,8)
+            setPadding(10,6,10,6)
+            gravity = android.view.Gravity.CENTER_VERTICAL
         }
         lockIcon = ImageView(this).apply { setImageResource(android.R.drawable.ic_lock_lock); contentDescription = "Bağlantı güvenli" }
-        shieldChip = Chip(this).apply { text = "🛡️ Koruma"; isCheckable = false; setOnClickListener { showShieldPanel() } }
+        shieldChip = Chip(this).apply { text = "🛡️"; isCheckable = false; setOnClickListener { showShieldPanel() } }
         val inputLayout = TextInputLayout(this, null, com.google.android.material.R.style.Widget_Material3_TextInputLayout_OutlinedBox).apply {
             hint = "Adres veya arama"
-            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+            boxBackgroundMode = TextInputLayout.BOX_BACKGROUND_OUTLINE
+            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f).apply { marginStart = 8; marginEnd = 8 }
         }
         addressInput = TextInputEditText(this).apply {
             setOnEditorActionListener { _, _, _ -> navigate(); true }
+            maxLines = 1
+            ellipsize = android.text.TextUtils.TruncateAt.END
         }
         inputLayout.addView(addressInput)
         val goBtn = MaterialButton(this).apply {
             text = "Git"
+            cornerRadius = 10
+            setPadding(18,0,18,0)
             setOnClickListener { navigate() }
         }
         addressRow.addView(lockIcon)
@@ -120,19 +134,23 @@ class MainActivity : AppCompatActivity() {
         addressCard.addView(addressRow)
         root.addView(addressCard)
 
-        // Kontroller: geri/ileri/yenile + zoom + bul + VPN + profil + SEÇENEKLER
-        val controls = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; setPadding(16,4,16,4) }
-        fun chip(t: String, onClick: () -> Unit) = Chip(this).apply { text = t; setOnClickListener { onClick() }; controls.addView(this) }
+        // Kontroller — YAZILAR SIĞSIN + KAYBOLMASIN diye yatay scroll
+        val controlsRow = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; setPadding(14,4,14,4) }
+        fun chip(t: String, onClick: () -> Unit) = Chip(this).apply { text = t; setOnClickListener { onClick() }; controlsRow.addView(this) }
         chip("◀") { if (::webView.isInitialized && webView.canGoBack()) webView.goBack() }
         chip("▶") { if (::webView.isInitialized && webView.canGoForward()) webView.goForward() }
         chip("↻") { if (::webView.isInitialized) webView.reload() }
         chip("🔍 Bul") { showFindDialog() }
         chip("＋/－") { if (::webView.isInitialized) webView.zoomIn() }
         routeChip = Chip(this).apply { text = "🌐 Normal"; setOnClickListener { cycleRoute() } }
-        controls.addView(routeChip)
+        controlsRow.addView(routeChip)
         chip("🔒 VPN") { showVpnSheet() }
         chip("⚙️ Ayarlar") { showSettings() }
-        root.addView(controls)
+        val controlsScroll = HorizontalScrollView(this).apply {
+            isHorizontalScrollBarEnabled = false
+            addView(controlsRow, ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT))
+        }
+        root.addView(controlsScroll)
 
         // İlerleme
         progressBar = ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal).apply {
@@ -184,9 +202,7 @@ class MainActivity : AppCompatActivity() {
                 }
                 override fun shouldInterceptRequest(view: WebView?, request: WebResourceRequest?): WebResourceResponse? {
                     val url = request?.url?.toString() ?: return null
-                    // Gerçek reklam engelleme: EasyList alt kümesi
                     if (adBlockList.any { url.contains(it) }) {
-                        // Reklam isteğini engelle — boş response
                         return WebResourceResponse("text/plain", "utf-8", null)
                     }
                     return super.shouldInterceptRequest(view, request)
@@ -195,15 +211,32 @@ class MainActivity : AppCompatActivity() {
                     val url = request?.url?.toString() ?: return false
                     val uri = request.url
                     val scheme = uri.scheme ?: return false
-                    // market://, intent://, discord://, telegram://, whatsapp:// gibi özel şemalar → harici uygulama
-                    if (scheme == "market" || scheme == "intent" || scheme == "discord" || scheme == "tg" || scheme == "whatsapp" || scheme == "vnd.youtube") {
+                    val host = uri.host ?: ""
+                    // OneLink Discord fix: discordapp.onelink.me → deep_link_value’yi doğrudan aç
+                    if (host == "discordapp.onelink.me") {
+                        val deep = uri.getQueryParameter("deep_link_value") ?: uri.getQueryParameter("deep_link_value_encoded")
+                        if (deep != null) {
+                            try {
+                                val decoded = Uri.decode(deep) // https://discord.gg/...
+                                // davet kodunu çıkar ve direkt discord.com/invite’e yönlendir
+                                if (decoded.contains("discord.gg/") || decoded.contains("discord.com/invite")) {
+                                    webView.post { webView.loadUrl(decoded) }
+                                    // veya uygulama varsa intent
+                                    try { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(decoded))) } catch (_: Exception) {}
+                                    return true
+                                }
+                            } catch (_: Exception) {}
+                        }
+                        // fallback: onelink’in https fallback’ına git
+                        uri.getQueryParameter("af_ios_url")?.let { if (it.startsWith("http")) { view?.loadUrl(it); return true } }
+                    }
+                    if (scheme == "market" || scheme == "intent" || scheme == "discord" || scheme == "tg" || scheme == "whatsapp" || scheme == "vnd.youtube" || scheme == "calyra") {
                         try {
                             val intent = when (scheme) {
                                 "market" -> Intent(Intent.ACTION_VIEW, uri)
                                 "intent" -> Intent.parseUri(url, Intent.URI_INTENT_SCHEME)
                                 else -> Intent(Intent.ACTION_VIEW, uri)
                             }
-                            // Play Store yoksa https fallback
                             if (intent.resolveActivity(packageManager) != null) startActivity(intent)
                             else if (scheme == "market") {
                                 val fallback = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=${uri.getQueryParameter("id") ?: "com.discord"}"))
@@ -215,7 +248,6 @@ class MainActivity : AppCompatActivity() {
                         return true
                     }
                     if (url.startsWith("javascript:") || url.startsWith("file://")) return true
-                    // https/http normal yükle
                     return false
                 }
             }

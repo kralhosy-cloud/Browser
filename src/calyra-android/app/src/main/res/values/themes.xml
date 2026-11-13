@@ -1,9 +1,28 @@
 <resources>
-    <style name="Theme.Calyra" parent="Theme.Material3.DayNight">
-        <item name="colorPrimary">#0B1220</item>
-        <item name="colorSecondary">#14C8B5</item>
-        <item name="colorPrimaryContainer">#0B1220</item>
-        <item name="colorSecondaryContainer">#14C8B5</item>
-        <item name="android:windowBackground">#F2F4F8</item>
+    <!-- Calyra — Sıfırdan kendi tasarım sistemi (hazır tema yok)
+         Renkler: Gece laciverti #080E1E (arka), kart #111B2F, vurgu turkuaz #12D6B5
+         Yazı: Manrope/Inter, köşe 14dp, gölge yumuşak -->
+    <style name="Theme.Calyra" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">#080E1E</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorPrimaryContainer">#111B2F</item>
+        <item name="colorSecondary">#12D6B5</item>
+        <item name="colorOnSecondary">#080E1E</item>
+        <item name="colorSurface">#F6F7FB</item>
+        <item name="colorSurfaceVariant">#E6E9F2</item>
+        <item name="android:windowBackground">#F6F7FB</item>
+        <item name="android:textColorPrimary">#0B1220</item>
+        <item name="android:textColorSecondary">#4A5570</item>
+        <!-- Kendi köşe/elevation -->
+        <item name="shapeAppearanceSmallComponent">@style/Shape.Calyra.Small</item>
+        <item name="shapeAppearanceMediumComponent">@style/Shape.Calyra.Medium</item>
+    </style>
+    <style name="Shape.Calyra.Small">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">10dp</item>
+    </style>
+    <style name="Shape.Calyra.Medium">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">14dp</item>
     </style>
 </resources>
