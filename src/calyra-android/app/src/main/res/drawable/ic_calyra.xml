@@ -1,0 +1,5 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
+    <!-- Calyra shield — not onion -->
+    <path android:fillColor="#0B1220" android:pathData="M12,2 L20,6 L20,14 C20,17 16,20 12,22 C8,20 4,17 4,14 L4,6 Z"/>
+    <path android:fillColor="#14C8B5" android:pathData="M12,7 L14,11 L18,11 L15,13 L16,17 L12,15 L8,17 L9,13 L6,11 L10,11 Z"/>
+</vector>

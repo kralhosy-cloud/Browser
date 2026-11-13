@@ -30,7 +30,7 @@ Bileşen sözleşmeleri: `docs/03-bilesen-sozlesmeleri.md`
 
 **Birincil doğrulama:** Linux x64 (Ubuntu 24.04, Clang 18, CMake 3.28, .NET 8.0.408, JDK 21). Windows/macOS talimatları `packaging/` altında, bu ortamda derlenmedi — *tested* etiketi yok. `.exe` çapraz platform diye tanıtılmadı.
 
-> **Android:** Görev metnine göre zorunlu değil. `com.calyra.browser` rezerve, fakat APK bu fazda üretilmedi. Nedenler ve yol haritası `docs/01-teknik-karar-ve-uygulanabilirlik.md` §1.2’de.
+**Android varyantı (kullanıcı isteği üzerine eklendi):** `src/calyra-android` — GeckoView 145.0.20251118022223 (MPL-2.0), Kotlin + NDK (C policy aynı), paket `com.calyra.browser`, API 29–34, arm64-v8a. Masaüstü CEF ≠ Android GeckoView farkları `docs/android/01-mimari-farklari.md`’de. Bu E2B container’da Android SDK yok — APK üretilmedi, derlenebilir iskelet + yönerge var (dürüst beyan).
 
 ## Build
 
