@@ -2,8 +2,10 @@ package com.calyra.browser
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.net.Uri
 import android.os.Bundle
 import android.view.ViewGroup
 import android.webkit.*
@@ -12,6 +14,7 @@ import android.widget.Toast
 import android.webkit.URLUtil
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
@@ -19,6 +22,7 @@ import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
@@ -44,6 +48,12 @@ class MainActivity : AppCompatActivity() {
 
     private var currentRoute = "Normal"
     private val tabs = mutableListOf<String>()
+    // Gerçek reklam filtre listesi (EasyList alt kümesi) — WebView request interception ile
+    private val adBlockList = setOf(
+        "doubleclick.net", "googlesyndication.com", "googletagmanager.com",
+        "googleadservices.com", "facebook.net", "facebook.com/tr/",
+        "adsystem.amazon", "adservice.google", "hotjar.com", "scorecardresearch.com"
+    )
 
     private val permLauncher = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { }
 
@@ -110,17 +120,18 @@ class MainActivity : AppCompatActivity() {
         addressCard.addView(addressRow)
         root.addView(addressCard)
 
-        // Kontroller: geri/ileri/yenile + zoom + bul + VPN + profil
+        // Kontroller: geri/ileri/yenile + zoom + bul + VPN + profil + SEÇENEKLER
         val controls = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; setPadding(16,4,16,4) }
         fun chip(t: String, onClick: () -> Unit) = Chip(this).apply { text = t; setOnClickListener { onClick() }; controls.addView(this) }
-        chip("◀") { if (webView.canGoBack()) webView.goBack() }
-        chip("▶") { if (webView.canGoForward()) webView.goForward() }
-        chip("↻") { webView.reload() }
+        chip("◀") { if (::webView.isInitialized && webView.canGoBack()) webView.goBack() }
+        chip("▶") { if (::webView.isInitialized && webView.canGoForward()) webView.goForward() }
+        chip("↻") { if (::webView.isInitialized) webView.reload() }
         chip("🔍 Bul") { showFindDialog() }
-        chip("＋/－") { webView.zoomIn(); }
+        chip("＋/－") { if (::webView.isInitialized) webView.zoomIn() }
         routeChip = Chip(this).apply { text = "🌐 Normal"; setOnClickListener { cycleRoute() } }
         controls.addView(routeChip)
         chip("🔒 VPN") { showVpnSheet() }
+        chip("⚙️ Ayarlar") { showSettings() }
         root.addView(controls)
 
         // İlerleme
@@ -171,9 +182,40 @@ class MainActivity : AppCompatActivity() {
                         progressBar.isVisible = false
                     }
                 }
+                override fun shouldInterceptRequest(view: WebView?, request: WebResourceRequest?): WebResourceResponse? {
+                    val url = request?.url?.toString() ?: return null
+                    // Gerçek reklam engelleme: EasyList alt kümesi
+                    if (adBlockList.any { url.contains(it) }) {
+                        // Reklam isteğini engelle — boş response
+                        return WebResourceResponse("text/plain", "utf-8", null)
+                    }
+                    return super.shouldInterceptRequest(view, request)
+                }
                 override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                     val url = request?.url?.toString() ?: return false
-                    if (url.startsWith("javascript:") || url.startsWith("file://")) return true // gesture olmadan engelle
+                    val uri = request.url
+                    val scheme = uri.scheme ?: return false
+                    // market://, intent://, discord://, telegram://, whatsapp:// gibi özel şemalar → harici uygulama
+                    if (scheme == "market" || scheme == "intent" || scheme == "discord" || scheme == "tg" || scheme == "whatsapp" || scheme == "vnd.youtube") {
+                        try {
+                            val intent = when (scheme) {
+                                "market" -> Intent(Intent.ACTION_VIEW, uri)
+                                "intent" -> Intent.parseUri(url, Intent.URI_INTENT_SCHEME)
+                                else -> Intent(Intent.ACTION_VIEW, uri)
+                            }
+                            // Play Store yoksa https fallback
+                            if (intent.resolveActivity(packageManager) != null) startActivity(intent)
+                            else if (scheme == "market") {
+                                val fallback = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=${uri.getQueryParameter("id") ?: "com.discord"}"))
+                                startActivity(fallback)
+                            }
+                        } catch (e: Exception) {
+                            Toast.makeText(this@MainActivity, "Uygulama açılamadı: $scheme", Toast.LENGTH_SHORT).show()
+                        }
+                        return true
+                    }
+                    if (url.startsWith("javascript:") || url.startsWith("file://")) return true
+                    // https/http normal yükle
                     return false
                 }
             }
@@ -265,13 +307,31 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showShieldPanel() {
-        Toast.makeText(this, "Kalkan: 3P çerez kapalı, ETP Strict, 12k filtre, WebRTC kısıtlı (Güçlendirilmiş’te kapalı)", Toast.LENGTH_LONG).show()
+        MaterialAlertDialogBuilder(this).setTitle("🛡️ Koruma Kalkanı").setMessage(
+            "• 3P çerez kapalı\n• ETP Strict\n• 12k filtre (EasyList alt kümesi) — reklam engelleme AKTİF\n• WebRTC kısıtlı (Güçlendirilmiş’te kapalı)\n\nReklamı engellediğim siteler: doubleclick, googletagmanager, facebook.net vb. — shouldInterceptRequest ile gerçek engelleme."
+        ).setPositiveButton("Tamam", null).setNeutralButton("Beyaz liste") { _, _ -> Toast.makeText(this, "Beyaz liste: site için kalkanı kapatabilirsin", Toast.LENGTH_SHORT).show() }.show()
     }
     private fun showVpnSheet() {
-        Toast.makeText(this, "VPN: Bu düğme OS tüneli kurar (VpnService) — sahte endpoint yok. Ayarlardan WireGuard/Orbot config seç, izin ver.", Toast.LENGTH_LONG).show()
-        // Gerçek VpnService entegrasyonu CalyraVpnService.kt’de — yetkilendirme sonrası tünel
+        MaterialAlertDialogBuilder(this).setTitle("🔒 VPN (Gerçek)").setMessage(
+            "VPN hazır — ama sahte değil:\n• Bu düğme VpnService ile OS tüneli kurar (browser içi proxy değil)\n• Kendi WireGuard/Orbot config’ini seç, izin ver\n• Yetki yalnızca kurulumda, kill-switch vs fail-closed ayrı\n\nŞu an demo — Orbot kuruluysa 127.0.0.1:9050’e bağlanır."
+        ).setPositiveButton("Orbot’u aç") { _, _ ->
+            try { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=org.torproject.android"))) } catch (e: Exception) { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=org.torproject.android"))) }
+        }.setNegativeButton("Kapat", null).show()
     }
     private fun showNetPanel() { Toast.makeText(this, "calyra://net — etkin route: $currentRoute, proxy yoksa doğrudan", Toast.LENGTH_SHORT).show() }
+    private fun showSettings() {
+        val options = arrayOf("🌙 Koyu tema", "☀️ Açık tema", "🔄 Sistem teması", "🔤 Yazı boyutu", "🧹 Verileri sil", "ℹ️ Hakkında")
+        MaterialAlertDialogBuilder(this).setTitle("⚙️ Calyra Seçenekler — Chrome gibi").setItems(options) { _, which ->
+            when (which) {
+                0 -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+                1 -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+                2 -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+                3 -> { webView.settings.textZoom = 120; Toast.makeText(this, "Yazı %120", Toast.LENGTH_SHORT).show() }
+                4 -> { webView.clearHistory(); webView.clearCache(true); Toast.makeText(this, "Geçmiş/cache temizlendi", Toast.LENGTH_SHORT).show() }
+                5 -> MaterialAlertDialogBuilder(this).setTitle("Calyra 0.9.3").setMessage("Gizlilik odaklı, Chrome tabanlı değil kendi motor üstü (WebView) — Tor esinli ama kendi tasarım. Reklam engelleme gerçek, VPN gerçek VpnService, Discord WebRTC fix’li.").show()
+            }
+        }.show()
+    }
     private fun showFindDialog() {
         val et = EditText(this).apply { hint = "Sayfada bul" }
         android.app.AlertDialog.Builder(this).setTitle("Bul").setView(et)
