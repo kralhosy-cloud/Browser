@@ -1,0 +1,16 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2026-05-13T10:00:00Z",
+    "component": {"type": "application", "name": "Calyra", "version": "0.9.0"}
+  },
+  "components": [
+    {"name": "cef", "version": "143.0.13+g30cb3bd+chromium-143.0.7499.170", "purl": "pkg:github/chromiumembedded/cef@143.0.13", "licenses": [{"license": {"id": "BSD-3-Clause"}}]},
+    {"name": "chromium", "version": "143.0.7499.170", "licenses": [{"license": {"id": "BSD-3-Clause"}}]},
+    {"name": "Avalonia", "version": "11.2.3", "purl": "pkg:nuget/Avalonia@11.2.3", "licenses": [{"license": {"id": "MIT"}}]},
+    {"name": "lazysodium-java", "version": "5.1.4", "purl": "pkg:maven/com.goterl/lazysodium-java@5.1.4", "licenses": [{"license": {"id": "Apache-2.0"}}]},
+    {"name": "junit-jupiter", "version": "5.10.3", "licenses": [{"license": {"id": "EPL-2.0"}}]}
+  ]
+}

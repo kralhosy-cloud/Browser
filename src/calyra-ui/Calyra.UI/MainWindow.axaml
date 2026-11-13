@@ -1,0 +1,63 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Calyra.UI.MainWindow"
+        Title="Calyra — Gizlilik Odaklı Tarayıcı"
+        Width="1280" Height="800"
+        WindowStartupLocation="CenterScreen">
+  <Grid RowDefinitions="Auto,Auto,*,Auto">
+    <!-- Chrome: browser trusted top bar — content cannot mimic -->
+    <Border Grid.Row="0" Background="#0B1220" Padding="8" BorderBrush="#1E2A44" BorderThickness="0,0,0,1">
+      <StackPanel Orientation="Horizontal" Spacing="8">
+        <Button Content="☰" AutomationProperties.Name="Ana menü" Click="OnMenuClick"/>
+        <Button Content="◀" AutomationProperties.Name="Geri" Click="OnBack"/>
+        <Button Content="▶" AutomationProperties.Name="İleri" Click="OnForward"/>
+        <Button Content="↻" AutomationProperties.Name="Yenile" Click="OnReload"/>
+        <Border Background="#0F1B33" CornerRadius="6" Padding="6,2" VerticalAlignment="Center">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <TextBlock Text="🔒" VerticalAlignment="Center" ToolTip.Tip="Bağlantı güvenli"/>
+            <TextBlock Text="🔰" VerticalAlignment="Center" ToolTip.Tip="Koruma kalkanı"/>
+            <TextBox x:Name="AddressBox" Width="600" Watermark="Adres veya arama (https://...)" KeyDown="OnAddressKeyDown"/>
+            <Button Content="Git" Click="OnNavigate"/>
+          </StackPanel>
+        </Border>
+        <ComboBox x:Name="ProfilePicker" SelectedIndex="0" ToolTip.Tip="Profil: Normal / Güçlendirilmiş / Tor">
+          <ComboBoxItem Content="Normal"/>
+          <ComboBoxItem Content="Güçlendirilmiş Gizlilik"/>
+          <ComboBoxItem Content="Tor Yönlendirmeli"/>
+        </ComboBox>
+        <TextBlock x:Name="RouteStatus" Text="Ağ: Doğrudan" VerticalAlignment="Center" Foreground="#14C8B5"/>
+      </StackPanel>
+    </Border>
+
+    <!-- Tab bar -->
+    <TabControl Grid.Row="1" x:Name="TabBar" Background="#F2F4F8">
+      <TabItem Header="Yeni Sekme">
+        <TextBlock Text="Sekme içeriği — CEF render view burada host edilir (OSR / native view)"/>
+      </TabItem>
+    </TabControl>
+
+    <!-- Content boundary — 2px contrast line separates chrome from web content -->
+    <Border Grid.Row="2" BorderBrush="#14C8B5" BorderThickness="0,2,0,0" Background="White">
+      <Grid>
+        <ContentControl x:Name="BrowserHost" Content="CEF Browser View (native_core) — sandbox aktif: kontrol ediliyor"/>
+        <Border x:Name="FullscreenOriginBar" IsVisible="False" Background="#111827" Padding="8" VerticalAlignment="Top">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBlock Text="Tam ekran — " Foreground="White"/>
+            <TextBlock x:Name="FullscreenOrigin" Text="https://example.com" Foreground="#14C8B5"/>
+            <Button Content="Çık (Esc)" Click="OnExitFullscreen"/>
+          </StackPanel>
+        </Border>
+      </Grid>
+    </Border>
+
+    <!-- Downloads / status -->
+    <Border Grid.Row="3" Background="#0B1220" Padding="6">
+      <StackPanel Orientation="Horizontal" Spacing="12">
+        <TextBlock Text="İndirmeler:" Foreground="White"/>
+        <TextBlock x:Name="DownloadStatus" Text="Beklemede" Foreground="#9CA3AF"/>
+        <Button Content="Ayarlar" Click="OnSettings"/>
+        <TextBlock Text="Calyra 0.9.0 — Güvenli silme garantisi yok; indirmeler ayrı dizinde" Foreground="#6B7280"/>
+      </StackPanel>
+    </Border>
+  </Grid>
+</Window>

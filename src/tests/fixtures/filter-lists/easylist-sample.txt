@@ -1,0 +1,7 @@
+! Calyra test filter list — EasyList subset, MIT licensed sample
+||ads.example^
+||tracker.example^$third-party
+##.ad-banner
+@@||cdn.example^$domain=broken.example
+! unsupported: should be ignored but counted as unsupported
+bad syntax [[[

@@ -1,0 +1,11 @@
+Mozilla Public License Version 2.0
+==================================
+
+Calyra application code is licensed under MPL-2.0.
+Third-party components retain their own licenses (see LICENSES/ and SBOM.cdx.json):
+- CEF and Chromium: BSD-3-Clause
+- Avalonia: MIT
+- JUnit: EPL-2.0
+- BoringSSL (via Chromium): BSD-style
+
+Full texts in LICENSES/.

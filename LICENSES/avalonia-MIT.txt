@@ -1,0 +1,3 @@
+MIT License — Avalonia
+Copyright (c) AvaloniaUI
+Permission is hereby granted ...

@@ -1,0 +1,18 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Calyra.UI.SettingsWindow"
+        Title="Calyra Ayarları"
+        Width="900" Height="700">
+  <StackPanel Margin="12" Spacing="8">
+    <TextBlock Text="Calyra Ayarları — Güvenli varsayılanlar, arama, geri alma" FontWeight="Bold"/>
+    <TextBox Watermark="Ayarlarda ara..."/>
+    <StackPanel>
+      <TextBlock Text="Tema: Koyu / Açık / Sistem — Yüksek kontrast desteklenir"/>
+      <TextBlock Text="Arama motoru: DuckDuckGo (varsayılan), öneriler ağ etkisiyle her harfi gönderir — gizlilik profilinde kapalı"/>
+      <TextBlock Text="Gizlilik raporu: etkin kontroller, son test zamanı, bilinmeyenler — sayısal puan yok"/>
+      <TextBlock Text="Proxy: HTTP CONNECT, SOCKS5, uzak DNS — PAC opt-in, auto-DIRECT yasak"/>
+      <TextBlock Text="Tor: resmi binary, SOCKS 19050, fail-closed — Tor hazır olmadan doğrudan çıkış yok"/>
+      <TextBlock Text="Reklam filtre: EasyList alt kümesi, desteklenmeyen kural successful sayılmaz"/>
+    </StackPanel>
+  </StackPanel>
+</Window>

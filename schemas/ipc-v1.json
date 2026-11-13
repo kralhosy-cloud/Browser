@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Calyra IPC v1",
+  "type": "object",
+  "required": ["version","type","request_id"],
+  "properties": {
+    "version": {"const": 1},
+    "type": {"enum": ["HELLO","CHALLENGE","HELLO_ACK","UPDATE_FILTERS_REQ","UPDATE_FILTERS_RESP","REPORT_REQ","REPORT_RESP","CANCEL"]},
+    "request_id": {"type":"integer","minimum":0,"maximum":4294967295}
+  }
+}

@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AssemblyName>Calyra.NativeInterop</AssemblyName>
+    <RootNamespace>Calyra.NativeInterop</RootNamespace>
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,11 @@
+build/
+out/
+bin/
+obj/
+*.user
+*.suo
+.vs/
+.idea/
+third_party/cef/*.tar.bz2
+third_party/cef/cef_binary_*/
+*.log
