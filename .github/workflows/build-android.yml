@@ -54,13 +54,13 @@ jobs:
           git config user.name "calyra-ci"
           git config user.email "ci@calyra.example"
           APK=$(ls src/calyra-android/app/build/outputs/apk/debug/*.apk | head -n1)
-          sha256sum "$APK" > /tmp/Calyra.apk.sha256
+          cp "$APK" /tmp/Calyra.apk
+          sha256sum /tmp/Calyra.apk > /tmp/Calyra.apk.sha256
           cat /tmp/Calyra.apk.sha256
           git fetch origin apk || true
           git checkout -B apk
-          # keep .git
           find . -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
-          cp "$APK" ./Calyra.apk
+          cp /tmp/Calyra.apk ./Calyra.apk
           cp /tmp/Calyra.apk.sha256 ./Calyra.apk.sha256
           echo "# Calyra APK" > README.md
           echo "Build $GITHUB_SHA $GITHUB_RUN_ID" >> README.md
