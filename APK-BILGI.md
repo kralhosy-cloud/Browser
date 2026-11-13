@@ -1,11 +1,14 @@
-# Calyra APK — İndirme ve Kurulum
+# Calyra APK — Modern UI + Discord Fix (CRASH DÜZELDİ)
 
-**Dosya:** Calyra.apk (11 MB, debug, SHA256: 0c860ba72439a10cd6754d08a9667748b2c00416cfad654303e449fd23065e14)
-**Kaynak:** GitHub Actions `arena/eae29342-browser` 806405f, workflow `43484843961` success
-**İçerik:** Minimal WebView tabanlı Calyra — adres çubuğu, sekmeler, kilit/kalkan göstergeleri, indirmeler. Full GeckoView + filtre + Tor varyantı `src/calyra-android`’da mimarisi hazır, fakat Compose/NDK bağımlılığı nedeniyle bu ilk APK minimal ile üretildi (dürüst beyan).
+**Dosya:** Calyra.apk — 11 MB
+**SHA256:** 92aeb1ccb81068f1280ff8980562959a24b3261b753a5779ec755131f2d9dd1b
+**Build:** GitHub Actions 43488633740 (commit 23ca31f) — success, apk branch bc6ee3f
+**İçerik:** Material 3 DayNight modern tema, yuvarlak adres kartı, TabLayout sekmeler, Discord WebRTC `onPermissionRequest` fix, VpnService iskeleti, hata sayfası retry
+
 **Kurulum:**
 ```bash
 adb install Calyra.apk
-# veya telefona kopyalayıp dosya yöneticisinden kur (Bilinmeyen kaynaklara izin ver)
+# veya telefona kopyala → Bilinmeyen kaynaklara izin ver
 ```
-**Not:** Bu debug APK, Play Store imzalı değil. Release için kendi keystore’unla `gradlew assembleRelease` yap.
+
+**Not:** Debug imzalı. Eski crash (lateinit webView) düzeltildi.
