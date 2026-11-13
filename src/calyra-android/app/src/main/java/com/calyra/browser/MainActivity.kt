@@ -69,17 +69,11 @@ class MainActivity : AppCompatActivity() {
         }
         root.addView(toolbar, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
 
-        // Sekme çubuğu (Chrome benzeri)
+        // Sekme çubuğu (Chrome benzeri) — listener webView hazır olduktan sonra eklenecek (crash fix)
         tabLayout = TabLayout(this).apply {
             setBackgroundColor(0xFFF2F4F8.toInt())
             setSelectedTabIndicatorColor(0xFF14C8B5.toInt())
-            addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
-                override fun onTabSelected(tab: TabLayout.Tab?) { tab?.let { webView.loadUrl(tabs[it.position]) } }
-                override fun onTabUnselected(tab: TabLayout.Tab?) {}
-                override fun onTabReselected(tab: TabLayout.Tab?) {}
-            })
         }
-        addTab("https://example.com")
         root.addView(tabLayout, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
 
         // Adres çubuğu kartı (kilit + kalkan + input + git)
@@ -220,6 +214,17 @@ class MainActivity : AppCompatActivity() {
         root.addView(footer)
 
         setContentView(root)
+
+        // Listener’ı webView hazır olduktan sonra ekle — UninitializedPropertyAccessException fix
+        tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
+            override fun onTabSelected(tab: TabLayout.Tab?) {
+                if (!::webView.isInitialized) return
+                tab?.let { if (it.position < tabs.size) webView.loadUrl(tabs[it.position]) }
+            }
+            override fun onTabUnselected(tab: TabLayout.Tab?) {}
+            override fun onTabReselected(tab: TabLayout.Tab?) {}
+        })
+        addTab("https://example.com")
         webView.loadUrl("https://example.com")
 
         // Kamera/mikro runtime izni baştan iste (Discord için)
@@ -242,8 +247,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun addTab(url: String) {
         tabs.add(url)
-        tabLayout.addTab(tabLayout.newTab().apply { text = url.take(18) })
-        tabLayout.selectTab(tabLayout.getTabAt(tabs.size - 1))
+        if (!::tabLayout.isInitialized) return
+        val tab = tabLayout.newTab().apply { text = url.take(18) }
+        tabLayout.addTab(tab, false) // false = select etme, crash tetikleme
+        // sadece webView hazırsa seç
+        if (::webView.isInitialized) tabLayout.selectTab(tab)
     }
 
     private fun cycleRoute() {
