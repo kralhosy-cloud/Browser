@@ -13,6 +13,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -66,17 +68,24 @@ jobs:
 
       - name: Push APK to apk branch
         run: |
+          set -x
           git config user.name "calyra-ci"
           git config user.email "ci@calyra.example"
+          cp /tmp/Calyra.apk /tmp/Calyra_apk_copy.apk
+          sha256sum /tmp/Calyra_apk_copy.apk > /tmp/Calyra.apk.sha256
           git fetch origin apk || true
           git checkout -B apk
-          find . -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
-          cp /tmp/Calyra.apk ./Calyra.apk
-          cp /tmp/Calyra.apk ./Calyra.apk.sha256 2>/dev/null || sha256sum /tmp/Calyra.apk > Calyra.apk.sha256
-          sha256sum ./Calyra.apk > Calyra.apk.sha256
+          # clean workspace except .git
+          ls -a
+          rm -rf app src docs packaging resources schemas scripts third_party .github .gitignore || true
+          ls -a
+          cp /tmp/Calyra_apk_copy.apk ./Calyra.apk
+          cp /tmp/Calyra.apk.sha256 ./Calyra.apk.sha256
           echo "# Calyra APK modern UI + Discord fix + VPN" > README.md
           echo "Build $GITHUB_SHA $GITHUB_RUN_ID" >> README.md
           cat Calyra.apk.sha256 >> README.md
           git add Calyra.apk Calyra.apk.sha256 README.md
+          git status
           git commit -m "APK $GITHUB_SHA modern" || true
+          git log --oneline -1
           git push origin apk --force
