@@ -2,5 +2,8 @@
     <style name="Theme.Calyra" parent="Theme.Material3.DayNight">
         <item name="colorPrimary">#0B1220</item>
         <item name="colorSecondary">#14C8B5</item>
+        <item name="colorPrimaryContainer">#0B1220</item>
+        <item name="colorSecondaryContainer">#14C8B5</item>
+        <item name="android:windowBackground">#F2F4F8</item>
     </style>
 </resources>
