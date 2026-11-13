@@ -42,6 +42,10 @@ jobs:
         run: |
           ls -lh src/calyra-android/app/build/outputs/apk/debug/
           sha256sum src/calyra-android/app/build/outputs/apk/debug/*.apk
+          cp src/calyra-android/app/build/outputs/apk/debug/app-debug.apk /tmp/Calyra.apk
+          cp /tmp/Calyra.apk ./Calyra.apk
+          sha256sum ./Calyra.apk > Calyra.apk.sha256
+          cat Calyra.apk.sha256
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -49,22 +53,14 @@ jobs:
           name: Calyra-APK
           path: src/calyra-android/app/build/outputs/apk/debug/*.apk
 
-      - name: Push APK to apk branch
-        run: |
-          git config user.name "calyra-ci"
-          git config user.email "ci@calyra.example"
-          APK=$(ls src/calyra-android/app/build/outputs/apk/debug/*.apk | head -n1)
-          cp "$APK" /tmp/Calyra.apk
-          sha256sum /tmp/Calyra.apk > /tmp/Calyra.apk.sha256
-          cat /tmp/Calyra.apk.sha256
-          git fetch origin apk || true
-          git checkout -B apk
-          find . -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
-          cp /tmp/Calyra.apk ./Calyra.apk
-          cp /tmp/Calyra.apk.sha256 ./Calyra.apk.sha256
-          echo "# Calyra APK" > README.md
-          echo "Build $GITHUB_SHA $GITHUB_RUN_ID" >> README.md
-          cat Calyra.apk.sha256 >> README.md
-          git add Calyra.apk Calyra.apk.sha256 README.md
-          git commit -m "APK $GITHUB_SHA" || true
-          git push origin apk --force
+      - name: Create Release with APK
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: apk-${{ github.run_id }}
+          name: Calyra APK ${{ github.run_id }}
+          files: |
+            ./Calyra.apk
+            ./Calyra.apk.sha256
+          body: "Calyra APK build ${{ github.sha }} — modern UI + Discord fix + VPN"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
