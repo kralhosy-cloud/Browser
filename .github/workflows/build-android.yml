@@ -26,7 +26,7 @@ jobs:
 
       - name: Install NDK and platforms
         run: |
-          sdkmanager --install "platforms;android-34" "build-tools;34.0.0" "ndk;26.1.10909125"
+          sdkmanager --install "platforms;android-34" "build-tools;34.0.0" "ndk;26.1.10909125" "cmake;3.22.1"
           yes | sdkmanager --licenses || true
           echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/26.1.10909125" >> $GITHUB_ENV
           echo "NDK_HOME=$ANDROID_SDK_ROOT/ndk/26.1.10909125" >> $GITHUB_ENV
@@ -36,18 +36,32 @@ jobs:
         with:
           gradle-version: 8.7
 
-      - name: Build APK (Gradle, no wrapper)
+      - name: Build APK (with diagnostics)
         working-directory: src/calyra-android
         run: |
-          gradle assembleDebug --stacktrace --info
+          echo "=== files ===" && ls -R
+          echo "=== gradle version ===" && gradle --version
+          echo "=== build ===" 
+          gradle assembleDebug --stacktrace --info 2>&1 | tee /tmp/build.log || echo "build failed with $?"
+          cat /tmp/build.log
+
+      - name: Upload build log on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: /tmp/build.log
+          retention-days: 7
 
       - name: Show APK info
+        if: success()
         run: |
           ls -lh src/calyra-android/app/build/outputs/apk/debug/
           sha256sum src/calyra-android/app/build/outputs/apk/debug/app-debug.apk || true
           unzip -l src/calyra-android/app/build/outputs/apk/debug/app-debug.apk | head -n 100
 
       - name: Upload APK
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: Calyra-APK
